@@ -21,7 +21,14 @@
     //Use variables above to calculate lbs to kb conversion
       $total_km = $total_mi * $mi_to_km;
     //Display the lbs to kg
-    echo "$total_mi mi equals $total_km km" ;
+    echo "$total_mi mi equals $total_km km" , "<br>" ;
+  
+    //Number of degrees f we want to convert to c
+      $total_f = 32;
+    //Convert fahrenheit to celsius
+      $total_c = ($total_f - 32)/(9/5);
+    //Display the lbs to kg
+    echo "$total_f degrees fahrenheit equals $total_c degrees celsius" ;
   
   ?>
 </body>
