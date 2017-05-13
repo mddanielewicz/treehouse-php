@@ -12,8 +12,12 @@
     //Use variables above to calculate lbs to kb conversion
     $total_kg = $total_lbs * $lbs_to_kg;
     //Display the lbs to kg
-    echo "$total_lbs lbs equals $total_kg kg" ,"<br>";
-  
+    echo "<p>Weight: ";
+    echo $total_lbs;
+    echo " lb = ";
+    echo $total_kg;
+    echo " kg</p>";
+
     //Number of mi we want to convert to km
       $total_mi = 20;
     //Floating point value for mi to km conversion
@@ -21,15 +25,22 @@
     //Use variables above to calculate lbs to kb conversion
       $total_km = $total_mi * $mi_to_km;
     //Display the mi to km
-    echo "$total_mi mi equals $total_km km" , "<br>" ;
-  
+    echo "<p> Distance: ";
+    echo $total_mi;
+    echo " miles = ";
+    echo $total_km;
+    echo " km</p>";
+
     //Number of degrees f we want to convert to c
       $total_f = 32;
     //Convert fahrenheit to celsius
       $total_c = ($total_f - 32)/(9/5);
     //Display the fahrenheit to celsius
-    echo "$total_f degrees fahrenheit equals $total_c degrees celsius" ;
-  
+    echo "<p>Temperature: ";
+    echo $total_f;
+    echo " degrees fahrenheit = ";
+    echo $total_c;
+    echo " degrees celsius</p>";
   ?>
 </body>
 </html
