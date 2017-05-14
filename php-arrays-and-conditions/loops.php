@@ -1,7 +1,7 @@
 <?php
-$currentYear = date('Y');
-$year = $currentYear - 100;
-
+// for ($year = date('Y') - 99; $year <= date('Y'); $year++ ){
+//   echo $year . '<br />';
+// }
 // while (++$year <= $currentYear) {
 //   echo $year . '<br />';
 // }
@@ -14,11 +14,15 @@ $learn = array('Conditionals', 'Arrays', 'Loops');
 $learn[] = 'Build something awesome';
 array_push($learn, 'Functions', 'Forms', 'Objects');
 array_unshift($learn, 'HTML', 'CSS');
-asort($learn);
+sort($learn);
 
-$count = 0;
-while ((list($key, $val) = each($learn)) && $count++ < 2) {
-  echo "$key => $val <br />";
+for($i = 0; $i < count($learn); $i++){
+  echo $learn[$i] . '<br>';
 }
+//
+// $count = 0;
+// while ((list($key, $val) = each($learn)) && $count++ < 2) {
+//   echo "$key => $val <br />";
+// }
 
  ?>
