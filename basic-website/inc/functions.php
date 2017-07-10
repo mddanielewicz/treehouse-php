@@ -1,27 +1,222 @@
 <?php
-function get_item_html($id,$item) {
+
+function get_catalog_count($category = null) {
+  $category = strtolower($category);
+  include('connection.php');
+
+  try{
+    $sql = "SELECT COUNT(media_id) FROM Media";
+    if(!empty($category)){
+      $result = $db->prepare(
+        $sql
+        . " WHERE LOWER(category) = ?"
+      );
+      $result->bindParam(1,$category,PDO::PARAM_STR);
+    }else{
+      $result = $db->prepare($sql);
+    }
+    $result->execute();
+}catch (Exception $e) {
+  echo "bad query";
+}
+
+$count = $result->fetchColumn(0);
+return $count;
+}
+
+function full_catalog_array($limit = null, $offset = 0) {
+  include("connection.php");
+
+  try {
+    $sql = "SELECT media_id, title, category, img
+      FROM Media
+      ORDER BY
+      REPLACE(
+        REPLACE(
+          REPLACE(title, 'The ',''),
+          'An ',
+          ''
+        ),
+        'A ',
+        ''
+      )";
+      if (is_integer($limit)){
+          $results = $db->prepare($sql . " Limit ? Offset ?");
+          $results->bindParam(1,$limit,PDO::PARAM_INT);
+          $results->bindParam(2,$offset,PDO::PARAM_INT);
+      }else {
+        $results = $db->prepare($sql);
+      }
+
+      $results->execute();
+  } catch (Exception $e) {
+    echo "Unable to retreive results";
+    exit;
+  }
+  $catalog = $results->fetchAll();
+  return $catalog;
+}
+
+function category_catalog_array($category, $limit = null, $offset = null) {
+  include("connection.php");
+  $category = strtolower($category);
+  try {
+    $sql = "SELECT media_id, title, category, img
+      FROM Media
+      WHERE LOWER(category) = ?
+      ORDER BY
+      REPLACE(
+        REPLACE(
+          REPLACE(title, 'The ',''),
+          'An ',
+          ''
+        ),
+        'A ',
+        ''
+      )";
+      if (is_integer($limit)){
+          $results = $db->prepare($sql . " Limit ? Offset ?");
+          $results->bindParam(1,$category,PDO::PARAM_INT);
+          $results->bindParam(2,$limit,PDO::PARAM_INT);
+          $results->bindParam(3,$offset,PDO::PARAM_INT);
+      }else {
+        $results = $db->prepare($sql);
+        $results->bindParam(1,$category,PDO::PARAM_STR);
+      }
+      $results->execute();
+  } catch (Exception $e) {
+    echo "Unable to retreive results";
+    exit;
+  }
+  $catalog = $results->fetchAll();
+  return $catalog;
+}
+
+function random_catalog_array() {
+  include("connection.php");
+
+  try {
+    $results = $db->query(
+      'SELECT media_id, title, category, img
+      FROM Media
+      ORDER BY RAND()
+      LIMIT 4');
+  } catch (Exception $e) {
+    echo "Unable to retreive results";
+    exit;
+  }
+  $catalog = $results->fetchAll();
+  return $catalog;
+}
+
+function single_item_array($id) {
+  include("connection.php");
+
+  try {
+    $results = $db->prepare(
+      "SELECT title, category, img, format, year, genre, publisher, isbn
+       FROM Media
+       JOIN Genres ON Media.genre_id = Genres.genre_id
+       LEFT OUTER JOIN Books ON Media.media_id = Books.media_id
+       WHERE Media.media_id = ?"
+      );
+      $results->bindParam(1,$id, PDO::PARAM_INT);
+      $results->execute();
+  } catch (Exception $e) {
+    echo "Unable to retreive results";
+    echo $e->getMessage();
+    exit;
+  }
+  $item = $results->fetch(PDO::FETCH_ASSOC);
+  if (empty($item)) return $item;
+
+  try {
+    $results = $db->prepare(
+      "SELECT fullname, role
+       FROM Media_People
+       JOIN People ON Media_People.people_id = People.people_id
+       WHERE Media_People.media_id = ?"
+      );
+      $results->bindParam(1,$id, PDO::PARAM_INT);
+      $results->execute();
+  } catch (Exception $e) {
+    echo "Unable to retreive results";
+    echo $e->getMessage();
+    exit;
+  }
+  while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
+    $item[$row["role"]][] = $row['fullname'];
+  }
+  return $item;
+}
+
+
+function get_item_html($item) {
     $output = "<li><a href='details.php?id="
-        . $id . "'><img src='" 
-        . $item["img"] . "' alt='" 
-        . $item["title"] . "' />" 
+        . $item['media_id'] . "'><img src='"
+        . $item["img"] . "' alt='"
+        . $item["title"] . "' />"
         . "<p>View Details</p>"
         . "</a></li>";
     return $output;
 }
 
+function genre_array($category = null) {
+
+  $category = strtolower($category);
+  include('connection.php');
+
+// Pull all the genres from the database
+try {
+  $sql = "SELECT genre, category"
+    . " FROM Genres "
+    . " JOIN Genre_Categories "
+    . " ON Genres.genre_id = Genre_Categories.genre_id ";
+    if (!empty($category)) {
+      $results = $db->prepare($sql
+        . " WHERE LOWER(category) = ?"
+        . " ORDER BY genre");
+      $results->bindParam(1, $category, PDO::PARAM_STR);
+    }else{
+      $results = $db->prepare($sql . " ORDER BY genre");
+    }
+    $results->execute();
+  }catch (Execption $e) {
+    echo "Unable to retreive results";
+    echo $e->getMessage();
+  }
+
+  $genres = array();
+  while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
+    $genres[$row['category']][] = $row['genre'];
+  }
+return $genres;
+// sorted alphabetically grouped by category.
+// Loop through those results
+// while ($row = $genres->fetchAllPDO::FETCH_ASSOC)) {
+//   $genreList[$row['category']][] = $row['genre'];
+// }
+// return $genreList;
+// var_dump($genreList);
+
+}
+//Create the HTML for the genre dropdown.
+// Include HTML to select the genre that the user submitted.
+
+
 function array_category($catalog,$category) {
     $output = array();
-    
+
     foreach ($catalog as $id => $item) {
         if ($category == null OR strtolower($category) == strtolower($item["category"])) {
             $sort = $item["title"];
             $sort = ltrim($sort,"The ");
             $sort = ltrim($sort,"A ");
             $sort = ltrim($sort,"An ");
-            $output[$id] = $sort;            
+            $output[$id] = $sort;
         }
     }
-    
+
     asort($output);
     return array_keys($output);
 }
