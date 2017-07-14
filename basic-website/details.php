@@ -2,9 +2,15 @@
 
 include("inc/functions.php");
 
+
 if (isset($_GET["id"])) {
     $id = filter_input(INPUT_GET,"id", FILTER_SANITIZE_NUMBER_INT);
       $item = single_item_array($id);
+}
+
+if(isset($_GET["author"])) {
+  $author = filter_input(INPUT_GET,"author",FILTER_SANITIZE_STRING);
+    $suggest = suggest_item_array($author);
 }
 
 if (empty($item)) {
@@ -14,6 +20,8 @@ if (empty($item)) {
 
 $pageTitle = $item["title"];
 $section = null;
+
+get_author_name($item);
 
 include("inc/header.php"); ?>
 
@@ -91,8 +99,13 @@ include("inc/header.php"); ?>
                 <?php } ?>
             </table>
 
+        </div> <!-- End Media Details -->
+
+        <div class="suggestion">
+        <h1>Suggested Items</h1>
+
         </div>
 
-    </div>
+    </div> <!-- End Wrapper -->
 
 </div>

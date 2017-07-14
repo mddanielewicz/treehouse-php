@@ -1,7 +1,7 @@
 <?php
 
-include('./.gitignore/env-var.php');
-include('../.gitignore/env-var.php');
+include('../env-var.php');
+include('env-var.php');
 
 try {
   $db = new PDO($dsn, $user, $pw, $options);

@@ -22,4 +22,12 @@
 
 	</div>
 
+	<div class="search">
+		<form>
+			<label for="s">Search:</label>
+			<input type="text" id="s" name="s" />
+			<input type="submit" value="go" />
+		</form>
+	</div>
+
 	<div id="content">

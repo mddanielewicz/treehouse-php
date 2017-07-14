@@ -1,12 +1,18 @@
 <?php
 
-function get_catalog_count($category = null) {
+function get_catalog_count($category = null,$search = null) {
   $category = strtolower($category);
   include('connection.php');
 
   try{
     $sql = "SELECT COUNT(media_id) FROM Media";
-    if(!empty($category)){
+    if (!empty($search)) {
+        $result = $db->prepare(
+            $sql
+            . " WHERE title LIKE ?"
+        );
+        $result->bindValue(1,'%'.$search.'%',PDO::PARAM_STR);
+    } else if (!empty($category)) {
       $result = $db->prepare(
         $sql
         . " WHERE LOWER(category) = ?"
@@ -92,21 +98,40 @@ function category_catalog_array($category, $limit = null, $offset = null) {
   return $catalog;
 }
 
-function random_catalog_array() {
-  include("connection.php");
+function search_catalog_array($search, $limit = null, $offset = 0) {
+    include("connection.php");
 
-  try {
-    $results = $db->query(
-      'SELECT media_id, title, category, img
-      FROM Media
-      ORDER BY RAND()
-      LIMIT 4');
-  } catch (Exception $e) {
-    echo "Unable to retreive results";
-    exit;
-  }
-  $catalog = $results->fetchAll();
-  return $catalog;
+    try {
+       $sql = "SELECT media_id, title, category,img
+         FROM Media
+         WHERE title LIKE ?
+         ORDER BY
+         REPLACE(
+           REPLACE(
+              REPLACE(title,'The ',''),
+              'An ',
+              ''
+           ),
+           'A ',
+           ''
+         )";
+       if (is_integer($limit)) {
+          $results = $db->prepare($sql . " LIMIT ? OFFSET ?");
+         $results->bindValue(1,"%".$search."%",PDO::PARAM_STR);
+          $results->bindParam(2,$limit,PDO::PARAM_INT);
+          $results->bindParam(3,$offset,PDO::PARAM_INT);
+       } else {
+         $results = $db->prepare($sql);
+         $results->bindValue(1,"%".$search."%",PDO::PARAM_STR);
+       }
+       $results->execute();
+    } catch (Exception $e) {
+       echo "Unable to retrieved results";
+       exit;
+    }
+
+    $catalog = $results->fetchAll();
+    return $catalog;
 }
 
 function single_item_array($id) {
@@ -127,6 +152,7 @@ function single_item_array($id) {
     echo $e->getMessage();
     exit;
   }
+
   $item = $results->fetch(PDO::FETCH_ASSOC);
   if (empty($item)) return $item;
 
@@ -144,6 +170,7 @@ function single_item_array($id) {
     echo $e->getMessage();
     exit;
   }
+
   while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
     $item[$row["role"]][] = $row['fullname'];
   }
@@ -151,9 +178,35 @@ function single_item_array($id) {
 }
 
 
+function get_author_name($item) {
+
+  include('connection.php');
+
+  $name = implode($item['author']);
+  try {
+    $sql = $db->prepare(
+      "SELECT title, category, img, format, year
+      FROM Media_People
+      JOIN People ON Media_People.people_id = People.people_id
+      JOIN Media ON Media_People.media_id = Media.media_id
+      WHERE fullname = ?"
+    );
+    $sql->bindParam(1,$name,PDO::PARAM_STR);
+    $sql->execute();
+    $new = $sql->fetchAll(PDO::FETCH_ASSOC);
+
+  } catch (Exception $e) {
+    echo "No query made";
+    echo $e->getMessage();
+    exit;
+  }
+
+}
+
 function get_item_html($item) {
     $output = "<li><a href='details.php?id="
-        . $item['media_id'] . "'><img src='"
+        . $item['media_id']
+        . $item['author'] . "'><img src='"
         . $item["img"] . "' alt='"
         . $item["title"] . "' />"
         . "<p>View Details</p>"
